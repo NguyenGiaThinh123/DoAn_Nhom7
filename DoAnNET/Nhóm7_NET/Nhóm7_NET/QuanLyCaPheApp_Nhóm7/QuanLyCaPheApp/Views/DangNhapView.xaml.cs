@@ -27,7 +27,7 @@ namespace QuanLyCaPheApp.Views
                     Application.Current.MainWindow = mainWin;
 
                     // Khi MainWindow đóng -> shutdown app
-                    //mainWin.Closed += (s, e) => Application.Current.Shutdown();
+                    mainWin.Closed += (s, e) => Application.Current.Shutdown();
 
                     mainWin.Show();
                     mainWin.Activate();  // Đảm bảo MainWindow focus

@@ -1,4 +1,4 @@
-using QuanLyCaPheApp.Helpers;
+﻿using QuanLyCaPheApp.Helpers;
 using QuanLyCaPheApp.Models;
 using QuanLyCaPheApp.Repositories;
 using System.Collections.ObjectModel;
@@ -70,15 +70,29 @@ namespace QuanLyCaPheApp.ViewModels
 
         private void OnHoaDonChanged()
         {
-            KhachHang  = null;
+            KhachHang = null;
             SelectedKM = null;
-            DiemDung   = 0;
+            DiemDung = 0;
             TienKhachDua = 0;
-            if (Selected?.MaKhachHang.HasValue == true)
-                KhachHang = _khRepo.GetById(Selected.MaKhachHang.Value);
+
+            if (Selected != null)
+            {
+                // Chạy xuống database lấy chi tiết các món ăn đắp vào hóa đơn 
+                Selected.ChiTiet = _hdRepo.GetChiTiet(Selected.MaHoaDon);
+
+                // Lấy thông tin khách hàng (nếu có)
+                if (Selected.MaKhachHang.HasValue)
+                {
+                    KhachHang = _khRepo.GetById(Selected.MaKhachHang.Value);
+                }
+            }
+
             TinhToan();
             OnPropertyChanged(nameof(HasHoaDon));
             OnPropertyChanged(nameof(TenKhach));
+
+            // Báo cho DataGrid bên dưới biết là chi tiết món đã được tải xong
+            OnPropertyChanged(nameof(Selected));
         }
 
         private void TinhToan()

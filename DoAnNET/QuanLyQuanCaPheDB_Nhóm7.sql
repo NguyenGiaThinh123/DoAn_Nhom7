@@ -257,7 +257,7 @@ GO
 PRINT N'=== Tạo thành công ==='
 GO
 -- ============================================================
--- FILE: 02_DuLieuMau.sql
+-- FILE: QuanLyQuanCaPheDB_Nhóm7.sql
 -- MÔ TẢ: Chèn dữ liệu mẫu vào cơ sở dữ liệu CafeQuanLyDB
 --         30 sản phẩm menu, tài khoản, bàn, khách hàng, khuyến mãi
 -- ============================================================
@@ -282,7 +282,7 @@ GO
 --    SHA256("123456") = 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
 -- ============================================================
 INSERT INTO NguoiDung (TenDangNhap, MatKhauHash, HoTen, Email, SoDienThoai, MaVaiTro, TrangThai) VALUES
-(N'admin',    N'8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', N'Nguyễn Văn An',    N'admin@cafe.vn',     N'0901234567', 1, 1),
+(N'admin',    N'8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', N'Nguyễn Gia Thịnh',    N'admin@cafe.vn',     N'0901234567', 1, 1),
 (N'phache01', N'8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', N'Trần Thị Bình',    N'binhtt@cafe.vn',    N'0902345678', 2, 1),
 (N'phache02', N'8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', N'Lê Văn Cường',     N'cuonglv@cafe.vn',   N'0903456789', 2, 1),
 (N'nhanvien01',N'8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92',N'Phạm Thị Dung',   N'dungpt@cafe.vn',    N'0904567890', 3, 1),
@@ -543,6 +543,10 @@ INSERT INTO LichSuDatBan (MaBan, MaKhachHang, TenKhachDat, SoDienThoai, SoNguoi,
 (9, 7, N'Bùi Thị Nhung',    N'0977777777', 4, DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,-2,GETDATE()), DATEADD(DAY,-2, DATEADD(HOUR, 2, GETDATE())), 5, N'DaXong', 4);
 GO
 
+UPDATE Ban 
+SET TrangThai = N'Đã đặt', 
+    NgayCapNhat = GETDATE()
+WHERE TenBan IN (N'Bàn 01', N'Bàn 07');
 -- ============================================================
 -- STORED PROCEDURE: Cập nhật hạng khách hàng
 -- ============================================================
@@ -592,3 +596,81 @@ GO
 PRINT N'=== Chèn dữ liệu mẫu thành công! ===';
 PRINT N'Tài khoản: admin/123456 | phache01/123456 | nhanvien01/123456';
 GO
+-- ============================================================
+-- Trigger: cập nhật bàn
+-- ============================================================
+CREATE OR ALTER TRIGGER trg_LichSuDatBan_DongBoBan
+ON LichSuDatBan
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    -- 1. Tự động đổi trạng thái bàn thành 'Đã đặt' khi có khách đặt trước
+    UPDATE b
+    SET b.TrangThai = N'Đã đặt', 
+        b.NgayCapNhat = GETDATE()
+    FROM Ban b
+    JOIN inserted i ON b.MaBan = i.MaBan
+    WHERE i.TrangThai IN (N'DatTruoc', N'Đặt trước', N'Đã đặt');
+
+    -- 2. Tự động trả lại bàn 'Trống' nếu khách hủy hoặc đã ăn xong
+    UPDATE b
+    SET b.TrangThai = N'Trống',
+        b.NgayCapNhat = GETDATE()
+    FROM Ban b
+    JOIN inserted i ON b.MaBan = i.MaBan
+    WHERE i.TrangThai IN (N'HuyBo', N'DaXong');
+END;
+GO
+
+CREATE OR ALTER TRIGGER trg_HoaDon_DongBoBan
+ON HoaDon
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    -- Chặn vòng lặp vô tận
+    IF TRIGGER_NESTLEVEL() > 1 RETURN;
+
+    UPDATE b
+    SET b.TrangThai = N'Đang dùng', b.NgayCapNhat = GETDATE()
+    FROM Ban b JOIN inserted i ON b.MaBan = i.MaBan
+    WHERE i.TrangThai = N'DangGoi';
+
+    UPDATE b
+    SET b.TrangThai = N'Trống', b.NgayCapNhat = GETDATE()
+    FROM Ban b JOIN inserted i ON b.MaBan = i.MaBan
+    WHERE i.TrangThai = N'DaThanhToan';
+END
+GO
+
+CREATE OR ALTER TRIGGER trg_Ban_DongBoLichSuDatBan
+ON Ban
+AFTER UPDATE
+AS
+BEGIN
+    -- Chặn vòng lặp vô tận
+    IF TRIGGER_NESTLEVEL() > 1 RETURN;
+
+    IF UPDATE(TrangThai)
+    BEGIN
+        UPDATE ls
+        SET ls.TrangThai = N'Đang dùng', ls.GioNhanBan = GETDATE()
+        FROM LichSuDatBan ls JOIN inserted i ON ls.MaBan = i.MaBan
+        WHERE i.TrangThai IN (N'Đang dùng', 'dang dung') 
+          AND ls.TrangThai IN (N'DatTruoc', N'Đặt trước', N'Đã đặt');
+
+        UPDATE ls
+        SET ls.TrangThai = N'Đã xong', ls.GioRoiBan = GETDATE()
+        FROM LichSuDatBan ls JOIN inserted i ON ls.MaBan = i.MaBan
+        WHERE i.TrangThai IN (N'Trống', 'trong')
+          AND ls.TrangThai IN (N'Đang dùng', N'DangDen', N'DatTruoc', N'Đặt trước', N'Đã đặt');
+    END
+END
+GO
+
+UPDATE b
+SET b.TrangThai = N'Đang dùng',
+    b.NgayCapNhat = GETDATE()
+FROM Ban b
+JOIN HoaDon hd ON b.MaBan = hd.MaBan
+WHERE hd.TrangThai = N'DangGoi' 
+  AND b.TrangThai != N'Đang dùng';

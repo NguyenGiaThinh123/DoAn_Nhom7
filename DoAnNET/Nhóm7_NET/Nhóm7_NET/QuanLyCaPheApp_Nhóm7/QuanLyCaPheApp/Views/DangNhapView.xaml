@@ -49,7 +49,7 @@
                     <!-- Thông báo lỗi -->
                     <Border Background="#FFF3F3" CornerRadius="4" Padding="10,7"
                             Margin="0,10,0,0"
-                            Visibility="{Binding CoThongBaoLoi, Converter={StaticResource BoolToVis}}">
+                            Visibility="{Binding ThongBaoLoi, Converter={StaticResource BoolToVis}}">
                         <TextBlock Text="{Binding ThongBaoLoi}" Foreground="{StaticResource DangerBrush}"
                                    FontSize="12" TextWrapping="Wrap"/>
                     </Border>

@@ -20,17 +20,21 @@ namespace QuanLyCaPheApp.Views
 
         private void OnBanChon(Ban ban)
         {
-            switch (ban.TrangThai)
+            // Đưa trạng thái về chữ thường để so sánh
+            string status = ban.TrangThai?.ToLower().Trim() ?? "";
+
+            switch (status)
             {
-                case "Trống":
+                case "trống":
                     NavigationService?.Navigate(new DatBanView());
                     break;
-                case "Đang dùng":
+                case "đang dùng":
                     var goi = new GoiMonView();
                     goi.SetBan(ban);
                     NavigationService?.Navigate(goi);
                     break;
-                case "Đã đặt":
+                case "đã đặt":
+                case "đặt trước": // Bổ sung thêm case này để phòng hờ database lưu chữ "đặt trước"
                     NavigationService?.Navigate(new DatBanView());
                     break;
             }

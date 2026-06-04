@@ -106,9 +106,8 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Button Style="{StaticResource TableButton}"
-                                Background="{Binding MauTrangThai}"
-                                Command="{Binding DataContext.ChonBanCommand,
-                                          RelativeSource={RelativeSource AncestorType=Page}}"
+                                Background="{Binding TrangThai, Converter={StaticResource StatusColor}}"
+                                Command="{Binding DataContext.ChonBanCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                 CommandParameter="{Binding}"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

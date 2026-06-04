@@ -19,7 +19,7 @@ GO
 --    SHA256("123456") = 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
 -- ============================================================
 INSERT INTO NguoiDung (TenDangNhap, MatKhauHash, HoTen, Email, SoDienThoai, MaVaiTro) VALUES
-(N'admin',      N'8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', N'Nguyễn Văn An',   N'admin@cafe.vn',    N'0901234567', 1),
+(N'admin',      N'8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', N'Nguyễn Gia Thịnh',   N'admin@cafe.vn',    N'0901234567', 1),
 (N'phache01',   N'8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', N'Trần Thị Bình',   N'binh@cafe.vn',     N'0902345678', 2),
 (N'phache02',   N'8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', N'Lê Văn Cường',    N'cuong@cafe.vn',    N'0903456789', 2),
 (N'nhanvien01', N'8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', N'Phạm Thị Dung',   N'dung@cafe.vn',     N'0904567890', 3),

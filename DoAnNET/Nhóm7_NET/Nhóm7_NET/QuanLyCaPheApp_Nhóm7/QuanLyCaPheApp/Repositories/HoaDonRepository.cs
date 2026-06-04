@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using QuanLyCaPheApp.Helpers;
 using QuanLyCaPheApp.Models;
 
@@ -48,8 +48,13 @@ namespace QuanLyCaPheApp.Repositories
         private const string HdSelectSql = @"
             SELECT hd.*,
                 b.TenBan,
-                ISNULL(kh.HoTen,'') AS TenKhachHang,
-                nd.HoTen            AS TenNguoiTao
+                -- Ưu tiên lấy tên Khách Hàng đăng ký, nếu không có thì lấy tên khách bên Đặt Bàn
+                COALESCE(kh.HoTen, 
+                         (SELECT TOP 1 TenKhachDat FROM LichSuDatBan ls 
+                          WHERE ls.MaBan = hd.MaBan AND ls.TrangThai IN (N'Đang dùng', N'Đặt trước', N'DatTruoc') 
+                          ORDER BY ls.NgayDat DESC), 
+                         '') AS TenKhachHang,
+                nd.HoTen AS TenNguoiTao
             FROM HoaDon hd
             JOIN Ban b ON hd.MaBan = b.MaBan
             JOIN NguoiDung nd ON hd.MaNguoiTao = nd.MaNguoiDung

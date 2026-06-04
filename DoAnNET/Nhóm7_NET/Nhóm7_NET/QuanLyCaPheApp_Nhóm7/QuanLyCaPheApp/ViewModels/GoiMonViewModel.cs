@@ -1,4 +1,4 @@
-using QuanLyCaPheApp.Models;
+﻿using QuanLyCaPheApp.Models;
 using QuanLyCaPheApp.Repositories;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -89,35 +89,41 @@ namespace QuanLyCaPheApp.ViewModels
             var giaHienTai = SelectedSP.GiaSauGiam;
             // Check if already in cart
             var existing = GioHang.FirstOrDefault(g => g.MaSanPham == SelectedSP.MaSanPham);
+
             if (existing != null)
             {
                 existing.SoLuong++;
                 existing.ThanhTien = existing.DonGia * existing.SoLuong * (1 - existing.PhanTramGiam / 100);
                 if (CurrentHD != null)
                     _hdRepo.CapNhatSoLuong(existing.MaChiTiet, existing.SoLuong, existing.ThanhTien);
+
+                int index = GioHang.IndexOf(existing);
+                GioHang.RemoveAt(index);
+                GioHang.Insert(index, existing);
             }
             else
             {
                 var ct = new ChiTietHoaDon
                 {
-                    MaHoaDon     = CurrentHD?.MaHoaDon ?? 0,
-                    MaSanPham    = SelectedSP.MaSanPham,
-                    TenSanPham   = SelectedSP.TenSanPham,
-                    DonGia       = giaHienTai,
-                    SoLuong      = 1,
+                    MaHoaDon = CurrentHD?.MaHoaDon ?? 0,
+                    MaSanPham = SelectedSP.MaSanPham,
+                    TenSanPham = SelectedSP.TenSanPham,
+                    DonGia = giaHienTai,
+                    SoLuong = 1,
                     PhanTramGiam = SelectedSP.PhanTramGiam,
-                    ThanhTien    = giaHienTai,
+                    ThanhTien = giaHienTai,
                     TrangThaiMon = "ChoPha",
                 };
 
                 if (CurrentHD == null) TaoHoaDonNhanh();
                 if (CurrentHD != null)
                 {
-                    ct.MaHoaDon  = CurrentHD.MaHoaDon;
+                    ct.MaHoaDon = CurrentHD.MaHoaDon;
                     ct.MaChiTiet = _hdRepo.ThemChiTiet(ct);
                 }
                 GioHang.Add(ct);
             }
+
             TinhTong();
             if (CurrentHD != null)
                 _hdRepo.CapNhatTongTien(CurrentHD.MaHoaDon, TongTien, TongTien);
@@ -128,16 +134,27 @@ namespace QuanLyCaPheApp.ViewModels
         private void TaoHoaDonNhanh()
         {
             if (SelectedBan == null || Helpers.SessionManager.CurrentUser == null) return;
+
+            
+            var lichSu = _hdRepo.GetLichSuDatBan(SelectedBan.MaBan)
+                                .FirstOrDefault(ls => ls.TrangThai == "Đang dùng" ||
+                                                      ls.TrangThai == "Đặt trước" ||
+                                                      ls.TrangThai == "DatTruoc");
+
             var hd = new HoaDon
             {
-                MaBan       = SelectedBan.MaBan,
-                MaNguoiTao  = Helpers.SessionManager.CurrentUser.MaNguoiDung,
-                LoaiHoaDon  = "TraSau",
-                TrangThai   = "DangGoi",
+                MaBan = SelectedBan.MaBan,
+                MaKhachHang = lichSu?.MaKhachHang,
+                MaNguoiTao = Helpers.SessionManager.CurrentUser.MaNguoiDung,
+                LoaiHoaDon = "TraSau",
+                TrangThai = "DangGoi",
             };
+
             hd.MaHoaDon = _hdRepo.TaoHoaDon(hd);
             CurrentHD = hd;
-            _banRepo.CapNhatTrangThai(SelectedBan.MaBan, "Dang dung");
+
+            // Đổi chữ "Dang dung" thành "Đang dùng" cho chuẩn với Trigger của database
+            _banRepo.CapNhatTrangThai(SelectedBan.MaBan, "Đang dùng");
             OnPropertyChanged(nameof(CoHoaDon));
         }
 
