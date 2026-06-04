@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using QuanLyCaPheApp.Helpers;
 using QuanLyCaPheApp.Models;
 
@@ -56,15 +56,19 @@ namespace QuanLyCaPheApp.Repositories
 
         public bool Update(KhachHang kh)
         {
-            var sql = @"UPDATE KhachHang SET HoTen=@h, Email=@e, DiaChi=@d,
-                        NgaySinh=@n, GhiChu=@g, NgayCapNhat=GETDATE()
-                        WHERE MaKhachHang=@id";
+            // Bổ sung SoDienThoai=@s vào câu lệnh SQL
+            var sql = @"UPDATE KhachHang SET HoTen=@h, SoDienThoai=@s, Email=@e, DiaChi=@d,
+                NgaySinh=@n, GhiChu=@g, NgayCapNhat=GETDATE()
+                WHERE MaKhachHang=@id";
+
             return DatabaseHelper.ExecuteNonQuery(sql, [
-                new("@h", kh.HoTen), new("@e", (object?)kh.Email ?? DBNull.Value),
-                new("@d", (object?)kh.DiaChi ?? DBNull.Value),
-                new("@n", (object?)kh.NgaySinh ?? DBNull.Value),
-                new("@g", (object?)kh.GhiChu  ?? DBNull.Value),
-                new("@id", kh.MaKhachHang)]) > 0;
+                new("@h", kh.HoTen),
+        new("@s", kh.SoDienThoai), // Bổ sung truyền dữ liệu số điện thoại mới
+        new("@e", (object?)kh.Email ?? DBNull.Value),
+        new("@d", (object?)kh.DiaChi ?? DBNull.Value),
+        new("@n", (object?)kh.NgaySinh ?? DBNull.Value),
+        new("@g", (object?)kh.GhiChu  ?? DBNull.Value),
+        new("@id", kh.MaKhachHang)]) > 0;
         }
 
         public bool Delete(int id)

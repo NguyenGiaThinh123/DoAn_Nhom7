@@ -18,22 +18,25 @@ namespace QuanLyCaPheApp.Repositories
                     COUNT(DISTINCT hd.MaKhachHang)  AS SoKhachHang
                 FROM HoaDon hd
                 WHERE hd.TrangThai = 'DaThanhToan'
-                  AND CAST(hd.NgayThanhToan AS DATE) BETWEEN @TuNgay AND @DenNgay
+                  -- Dùng logic >= và < Ngày hôm sau để lấy trọn vẹn đến 23:59:59
+                  AND hd.NgayThanhToan >= @TuNgay 
+                  AND hd.NgayThanhToan < DATEADD(day, 1, @DenNgay)
                 GROUP BY CAST(hd.NgayThanhToan AS DATE)
                 ORDER BY Ngay";
 
             return DatabaseHelper.ExecuteQuery(sql,
                 r => new ThongKeNgay
                 {
-                    Ngay        = DT(r, "Ngay"),
-                    SoHoaDon    = I(r,  "SoHoaDon"),
-                    DoanhThuGoc = D(r,  "DoanhThuGoc"),
-                    TongGiamGia = D(r,  "TongGiamGia"),
-                    ThucThu     = D(r,  "ThucThu"),
-                    SoKhachHang = I(r,  "SoKhachHang"),
+                    Ngay = DT(r, "Ngay"),
+                    SoHoaDon = I(r, "SoHoaDon"),
+                    DoanhThuGoc = D(r, "DoanhThuGoc"),
+                    TongGiamGia = D(r, "TongGiamGia"),
+                    ThucThu = D(r, "ThucThu"),
+                    SoKhachHang = I(r, "SoKhachHang"),
                 },
-                [new SqlParameter("@TuNgay",  tuNgay.ToString("yyyy-MM-dd")),
-                 new SqlParameter("@DenNgay", denNgay.ToString("yyyy-MM-dd"))]);
+                // Truyền thẳng kiểu Date, không chuyển sang String
+                [new SqlParameter("@TuNgay",  tuNgay.Date),
+                 new SqlParameter("@DenNgay", denNgay.Date)]);
         }
 
         public List<TopSanPham> GetTopSanPham(DateTime tuNgay, DateTime denNgay, int top = 10)
@@ -46,20 +49,23 @@ namespace QuanLyCaPheApp.Repositories
                 FROM ChiTietHoaDon ct
                 JOIN HoaDon hd ON ct.MaHoaDon = hd.MaHoaDon
                 WHERE hd.TrangThai = 'DaThanhToan'
-                  AND CAST(hd.NgayThanhToan AS DATE) BETWEEN @tn AND @dn
+                  -- Áp dụng cùng logic an toàn cho Top Sản Phẩm
+                  AND hd.NgayThanhToan >= @tn 
+                  AND hd.NgayThanhToan < DATEADD(day, 1, @dn)
                 GROUP BY ct.TenSanPham
                 ORDER BY TongDoanhThu DESC";
 
             return DatabaseHelper.ExecuteQuery(sql,
                 r => new TopSanPham
                 {
-                    TenSanPham   = S(r, "TenSanPham"),
-                    TongSoLuong  = I(r, "TongSoLuong"),
+                    TenSanPham = S(r, "TenSanPham"),
+                    TongSoLuong = I(r, "TongSoLuong"),
                     TongDoanhThu = D(r, "TongDoanhThu"),
                 },
+                // Truyền thẳng kiểu Date
                 [new SqlParameter("@top", top),
-                 new SqlParameter("@tn",  tuNgay.ToString("yyyy-MM-dd")),
-                 new SqlParameter("@dn",  denNgay.ToString("yyyy-MM-dd"))]);
+                 new SqlParameter("@tn",  tuNgay.Date),
+                 new SqlParameter("@dn",  denNgay.Date)]);
         }
 
         public decimal GetDoanhThuHomNay()

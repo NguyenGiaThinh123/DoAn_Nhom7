@@ -22,7 +22,11 @@ namespace QuanLyCaPheApp.ViewModels
         public string ThongBaoLoi
         {
             get => _thongBaoLoi;
-            set => SetProperty(ref _thongBaoLoi, value);
+            set
+            {
+                SetProperty(ref _thongBaoLoi, value);
+                OnPropertyChanged(nameof(CoThongBaoLoi));
+            }
         }
 
         public bool DangXuLy
